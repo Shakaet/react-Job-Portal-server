@@ -50,12 +50,7 @@ async function run() {
       res.send(result)
   })
 
-
-
-
   
-
-
 
     app.get("/jobs",async(req,res)=>{
 
@@ -92,6 +87,32 @@ async function run() {
     })
 
       // application Apis
+
+
+
+      
+  app.patch("/job-application/:id",async(req,res)=>{
+    let idx= req.params.id
+
+    let data=req.body
+    console.log(data.status)
+
+
+    const filter = {_id: new ObjectId(idx)};
+    const updateDoc = {
+      $set: {
+        status: data.status
+      },
+    };
+
+    const result = await applicationDB.updateOne(filter, updateDoc);
+
+    res.send(result)
+
+
+
+
+  })
 
 
       app.get("/job-application/job/:jobId",async(req,res)=>{
@@ -157,6 +178,9 @@ async function run() {
       })
 
 
+     
+
+
       app.get("/jobs-application",async(req,res)=>{
 
         let email=req.query.email
@@ -186,6 +210,8 @@ async function run() {
 
 
       })
+
+     
 
 
 
