@@ -38,6 +38,9 @@ async function run() {
     const jobsDB = database.collection("jobs");
     const applicationDB = database.collection("jobApplication");
 
+
+    // jobs APIs
+
     app.get("/jobs/:id",async(req,res)=>{
 
       let idx=req.params.id
@@ -49,13 +52,57 @@ async function run() {
 
 
 
+
+  
+
+
+
     app.get("/jobs",async(req,res)=>{
-        const cursor = jobsDB.find();
-        let result= await cursor.toArray()
-        res.send(result)
+
+       let email= req.query.email
+
+       let result;
+
+       if(email){
+         let query={hr_email:email}
+        const cursor=jobsDB.find(query)
+         result= await cursor.toArray()
+        // res.send(result)
+       }
+     else{
+      const cursor = jobsDB.find();
+         result= await cursor.toArray()
+
+     }
+        // const cursor = jobsDB.find(query);
+        //  result= await cursor.toArray()
+        // res.send(result)
+
+       res.send(result)
+        
+    })
+
+
+    app.post("/jobs",async(req,res)=>{
+
+      let formData=req.body
+      console.log(formData)
+      const result = await jobsDB.insertOne(formData);
+      res.send(result)
     })
 
       // application Apis
+
+
+      app.get("/job-application/job/:jobId",async(req,res)=>{
+        let idx=req.params.jobId
+    
+        let query={job_id:idx}
+        const result = await applicationDB.find(query).toArray();
+        res.send(result)
+    
+    
+      })
 
 
       app.post("/jobs-application",async(req,res)=>{
@@ -64,8 +111,48 @@ async function run() {
         console.log(data)
     
         const result = await applicationDB.insertOne(data);
+
+
+        /// Application count (Not the best way) (use aggregate)
+
+        let id= data.job_id
+
+        let query ={_id :new ObjectId(id)}
+
+        let job= await jobsDB.findOne(query)
+        let count=0
+
+        if(job.applicationCount){
+          count=job.applicationCount+1
+        }
+        else{
+          count=1
+        }
+        // now update
+
+        let filter={_id: new ObjectId(id)}
+        let updatedDoc={
+          $set:{
+            applicationCount:count
+          }
+        }
+
+        let updatedResult=await jobsDB.updateOne(filter,updatedDoc)
+
+
         res.send(result)
 
+
+      })
+
+      app.delete("/jobs-application/:id",async(req,res)=>{
+
+        let idx=req.params.id
+
+        let query={_id: new ObjectId(idx)}
+
+        const result = await applicationDB.deleteOne(query);
+        res.send(result)
 
       })
 
