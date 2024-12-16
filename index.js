@@ -2,10 +2,55 @@ const express = require('express')
 const app = express()
 var cors = require('cors')
 require('dotenv').config()
+var jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 3000
-app.use(cors())
+app.use(cors({
+  origin:["http://localhost:5173"],
+  credentials:true
+}))
 app.use(express.json())
+app.use(cookieParser());
+
+
+
+let logger=(req,res,next)=>{
+  console.log("logger running")
+  next()
+
+}
+
+let varifyToken=(req,res,next)=>{
+  console.log("middleware running")
+
+  let token =req.cookies?.token
+  console.log(token)
+
+
+
+
+
+  if(!token){
+    return res.status(401).send({message:"unauthorized token"})
+  }
+
+
+  jwt.verify(token, process.env.JWT_Secret,(err, decoded)=>{
+
+    if(err){
+      return res.status(401).send({message:"unauthorized token"})
+    }
+
+    req.user=decoded
+    next()
+  });
+  
+
+  
+
+}
 
 // jobPortal
 // 9yKyG4Oy6aPitW0d
@@ -37,6 +82,51 @@ async function run() {
     const database = client.db("jobPortal");
     const jobsDB = database.collection("jobs");
     const applicationDB = database.collection("jobApplication");
+    
+
+  
+    //Api Related for token 
+
+    // app.post("/jwt",async(req,res)=>{
+      
+
+    //   let userData=req.body
+
+    //   let token= jwt.sign(userData, "secret", { expiresIn: "1h" });
+
+    //   res.send(token)
+      
+    // })
+    
+    // app.post("/jwt",async(req,res)=>{
+      
+
+    //   let userData=req.body
+
+    //   let token= jwt.sign(userData, process.env.JWT_Secret, { expiresIn: "1h" });
+
+    //   res.send(token)
+      
+    // })
+
+
+    app.post("/jwt",async(req,res)=>{
+      
+
+      let userData=req.body
+
+      let token= jwt.sign(userData, process.env.JWT_Secret, { expiresIn: "1h" });
+
+      res
+      .cookie('token', token, {
+        httpOnly: true,       // Prevent JavaScript access to the cookie
+        secure: false,         // Send cookie over HTTPS only
+        
+    })
+      .send({success:true})
+      
+    })
+
 
 
     // jobs APIs
@@ -52,8 +142,8 @@ async function run() {
 
   
 
-    app.get("/jobs",async(req,res)=>{
-
+    app.get("/jobs",logger,async(req,res)=>{
+       console.log(("now jobs running"))
        let email= req.query.email
 
        let result;
@@ -181,11 +271,17 @@ async function run() {
      
 
 
-      app.get("/jobs-application",async(req,res)=>{
+      app.get("/jobs-application",varifyToken,async(req,res)=>{
 
         let email=req.query.email
 
         let query={applicantMail:email}
+
+
+          if(req.user.email !==  req.query.email){
+            return res.status(403).send({message:"forbidden token"})
+          }
+        // console.log(req.cookies)
 
 
 
