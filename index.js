@@ -108,6 +108,7 @@ async function run() {
     //   res.send(token)
       
     // })
+    
 
 
     app.post("/jwt",async(req,res)=>{
@@ -125,6 +126,17 @@ async function run() {
     })
       .send({success:true})
       
+    });
+
+
+
+    app.post("/logout",(req,res)=>{
+      res
+      .clearCookie('token',  {
+        httpOnly: true,
+        secure: false, // Use true in production with HTTPS
+      })
+      .send({success:true})
     })
 
 

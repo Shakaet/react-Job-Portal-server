@@ -4,6 +4,8 @@
 //    npm i jsonwebtoken,cookie-parser
 //    jwt.sign(payload,secret,{expiresIn:"1h"})
 
+const { CommandFailedEvent } = require("mongodb")
+
 
 // step 2: send token (generated in the server side) to client side
 
@@ -43,3 +45,9 @@
 
 // if valid then give the data to client
 // if not valid then logout
+
+
+
+// generates a token by Command
+//  1. node
+//  2. require("crypto").randomBytes(64).toString("hex")
