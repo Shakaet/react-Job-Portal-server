@@ -8,7 +8,7 @@ const cookieParser = require('cookie-parser');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 3000
 app.use(cors({
-  origin:["http://localhost:5173"],
+  origin:["http://localhost:5173","https://job-portal-891fe.web.app","https://job-portal-891fe.firebaseapp.com"],
   credentials:true
 }))
 app.use(express.json())
@@ -120,8 +120,10 @@ async function run() {
 
       res
       .cookie('token', token, {
-        httpOnly: true,       // Prevent JavaScript access to the cookie
-        secure: false,         // Send cookie over HTTPS only
+        httpOnly: true, 
+        // secure:false  ,    // Prevent JavaScript access to the cookie
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",         // Send cookie over HTTPS only
         
     })
       .send({success:true})
@@ -134,7 +136,9 @@ async function run() {
       res
       .clearCookie('token',  {
         httpOnly: true,
-        secure: false, // Use true in production with HTTPS
+        // secure:false,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict", // Use true in production with HTTPS
       })
       .send({success:true})
     })
